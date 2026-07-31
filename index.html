@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudyGrid — Daily Career Growth Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1117;
+    --surface: #181A24;
+    --surface-2: #1E2130;
+    --border: #2A2D3E;
+    --border-focus: #4F6BFF;
+    --text: #E4E6F0;
+    --text-muted: #8B8FA3;
+    --text-dim: #5C6078;
+    --accent: #4F6BFF;
+    --accent-glow: rgba(79, 107, 255, 0.15);
+    --green: #34D399;
+    --green-bg: rgba(52, 211, 153, 0.1);
+    --amber: #FBBF24;
+    --amber-bg: rgba(251, 191, 36, 0.1);
+    --red: #F87171;
+    --red-bg: rgba(248, 113, 113, 0.1);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(15, 17, 23, 0.85);
+    backdrop-filter: blur(16px);
+  }
+  .logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px; background: var(--accent);
+    border-radius: 8px; display: grid; place-items: center;
+    font-size: 16px; color: #fff;
+  }
+  .header-actions { display: flex; gap: 8px; }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .btn-primary {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-danger {
+    border-color: var(--red); color: var(--red); background: var(--red-bg);
+  }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  /* ─── LAYOUT ─── */
+  .app { max-width: 1100px; margin: 0 auto; padding: 24px 28px 80px; }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 28px;
+    border-bottom: 1px solid var(--border); padding-bottom: 0;
+  }
+  .tab {
+    font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 500;
+    padding: 10px 18px; cursor: pointer; color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s ease; background: none; border-top: 0; border-left: 0; border-right: 0;
+  }
+  .tab:hover { color: var(--text-muted); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ─── STATS ROW ─── */
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+  }
+  .stat-label {
+    font-size: 12px; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 500;
+  }
+  .stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px; font-weight: 700;
+  }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ─── SUBJECT MANAGER ─── */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px; font-weight: 600;
+    margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .add-row {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+  .add-row input, .add-row select {
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); outline: none;
+  }
+  .add-row input:focus, .add-row select:focus { border-color: var(--border-focus); }
+  .add-row input { flex: 1; }
+
+  /* ─── SUBJECT CARDS ─── */
+  .subjects-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px; margin-bottom: 32px;
+  }
+  .subject-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .subject-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .subject-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .subject-tag {
+    font-size: 11px; font-weight: 500; padding: 2px 8px;
+    border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .tag-core { background: var(--accent-glow); color: var(--accent); }
+  .tag-project { background: var(--green-bg); color: var(--green); }
+  .tag-soft { background: var(--amber-bg); color: var(--amber); }
+
+  .remove-btn {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 16px; padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .remove-btn:hover { background: var(--red-bg); color: var(--red); }
+
+  .progress-bar-wrap {
+    background: var(--surface-2); border-radius: 20px; height: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: 20px;
+    background: var(--accent); transition: width 0.4s ease;
+  }
+  .progress-info {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .target-row {
+    display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim);
+  }
+  .target-input {
+    width: 50px; padding: 3px 6px; font-size: 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── TODAY'S PLAN ─── */
+  .today-section { margin-bottom: 32px; }
+  .date-nav {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .date-nav button {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-muted); width: 32px; height: 32px;
+    border-radius: var(--radius-sm); cursor: pointer; font-size: 14px;
+  }
+  .date-nav button:hover { border-color: var(--text-dim); }
+  .date-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; color: var(--text-muted);
+  }
+  .today-badge {
+    font-size: 11px; background: var(--accent-glow); color: var(--accent);
+    padding: 2px 8px; border-radius: 20px; font-weight: 500;
+  }
+
+  .task-list { display: flex; flex-direction: column; gap: 6px; }
+  .task-item {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    transition: all 0.15s ease;
+  }
+  .task-item.done { opacity: 0.5; }
+  .task-item.done .task-text { text-decoration: line-through; }
+  .task-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border); background: none;
+    cursor: pointer; display: grid; place-items: center;
+    transition: all 0.15s ease; flex-shrink: 0;
+  }
+  .task-check.checked {
+    background: var(--green); border-color: var(--green);
+  }
+  .task-check.checked::after {
+    content: '✓'; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .task-text { flex: 1; font-size: 14px; }
+  .task-subject-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-dim);
+    background: var(--surface-2); padding: 2px 8px; border-radius: 4px;
+  }
+  .task-hours {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-muted);
+    min-width: 40px; text-align: right;
+  }
+  .task-remove {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 14px; padding: 2px;
+  }
+  .task-remove:hover { color: var(--red); }
+
+  .add-task-row {
+    display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .add-task-row input, .add-task-row select {
+    font-family: 'Inter', sans-serif; font-size: 13px;
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); outline: none;
+  }
+  .add-task-row input:focus, .add-task-row select:focus { border-color: var(--border-focus); }
+  .add-task-row input[type="text"] { flex: 1; min-width: 160px; }
+  .add-task-row input[type="number"] { width: 70px; }
+
+  /* ─── HEATMAP ─── */
+  .heatmap-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    overflow-x: auto;
+  }
+  .heatmap-grid {
+    display: flex; gap: 3px;
+  }
+  .heatmap-col { display: flex; flex-direction: column; gap: 3px; }
+  .heatmap-cell {
+    width: 14px; height: 14px; border-radius: 3px;
+    background: var(--surface-2);
+  }
+  .heat-1 { background: rgba(79, 107, 255, 0.2); }
+  .heat-2 { background: rgba(79, 107, 255, 0.4); }
+  .heat-3 { background: rgba(79, 107, 255, 0.6); }
+  .heat-4 { background: var(--accent); }
+  .heatmap-legend {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 12px; font-size: 11px; color: var(--text-dim);
+  }
+  .heatmap-legend .heatmap-cell { width: 12px; height: 12px; }
+  .heatmap-months {
+    display: flex; font-size: 11px; color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .heatmap-months span { min-width: 50px; }
+
+  /* ─── NOTES ─── */
+  .notes-area {
+    width: 100%; min-height: 120px; padding: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    resize: vertical; outline: none; line-height: 1.6;
+  }
+  .notes-area:focus { border-color: var(--border-focus); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: grid; place-items: center; z-index: 200;
+    backdrop-filter: blur(4px);
+  }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; width: 90%; max-width: 480px;
+  }
+  .modal h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    margin-bottom: 16px; font-size: 18px;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ─── STREAK BADGE ─── */
+  .streak-fire { color: var(--amber); }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--text-dim); font-size: 14px;
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-hint { margin-top: 8px; font-size: 13px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 640px) {
+    .header { padding: 16px; }
+    .app { padding: 16px 16px 80px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .subjects-grid { grid-template-columns: 1fr; }
+    .add-row, .add-task-row { flex-wrap: wrap; }
+    .add-row input, .add-task-row input[type="text"] { min-width: 100%; }
+    .heatmap-cell { width: 11px; height: 11px; }
+  }
+
+  .hidden { display: none !important; }
+
+  /* ─── TOOLTIP ─── */
+  .heatmap-cell { position: relative; cursor: default; }
+  .heatmap-cell[title]:hover::after {
+    content: attr(title);
+    position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 4px 8px; border-radius: 4px; font-size: 11px;
+    white-space: nowrap; z-index: 10; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">◧</div>
+    StudyGrid
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-sm" onclick="exportData()">Export JSON</button>
+    <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</div>
+
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" data-tab="today" onclick="switchTab('today')">Today</button>
+    <button class="tab" data-tab="subjects" onclick="switchTab('subjects')">Subjects</button>
+    <button class="tab" data-tab="progress" onclick="switchTab('progress')">Progress</button>
+    <button class="tab" data-tab="notes" onclick="switchTab('notes')">Notes</button>
+  </div>
+
+  <!-- ═══ TODAY TAB ═══ -->
+  <div id="tab-today">
+    <div class="stats" id="stats-row"></div>
+
+    <div class="today-section">
+      <div class="date-nav">
+        <button onclick="changeDate(-1)">‹</button>
+        <span class="date-display" id="current-date"></span>
+        <span class="today-badge hidden" id="today-badge">today</span>
+        <button onclick="changeDate(1)">›</button>
+      </div>
+
+      <div class="task-list" id="task-list"></div>
+
+      <div class="add-task-row">
+        <input type="text" id="new-task" placeholder="Add a study task…" onkeydown="if(event.key==='Enter')addTask()">
+        <select id="task-subject"></select>
+        <input type="number" id="task-hours" placeholder="hrs" min="0.25" step="0.25" value="1">
+        <button class="btn btn-primary btn-sm" onclick="addTask()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SUBJECTS TAB ═══ -->
+  <div id="tab-subjects" class="hidden">
+    <div class="section-title">
+      Subjects & Skills
+    </div>
+    <div class="add-row">
+      <input type="text" id="new-subject" placeholder="e.g. System Design, Spring Boot, DSA…" onkeydown="if(event.key==='Enter')addSubject()">
+      <select id="subject-category">
+        <option value="core">Core</option>
+        <option value="project">Project</option>
+        <option value="soft">Soft Skill</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="addSubject()">Add Subject</button>
+    </div>
+    <div class="subjects-grid" id="subjects-grid"></div>
+  </div>
+
+  <!-- ═══ PROGRESS TAB ═══ -->
+  <div id="tab-progress" class="hidden">
+    <div class="section-title" style="margin-bottom:20px">Study Heatmap — Last 20 Weeks</div>
+    <div class="heatmap-wrap">
+      <div class="heatmap-months" id="heatmap-months"></div>
+      <div class="heatmap-grid" id="heatmap-grid"></div>
+      <div class="heatmap-legend">
+        <span>Less</span>
+        <div class="heatmap-cell"></div>
+        <div class="heatmap-cell heat-1"></div>
+        <div class="heatmap-cell heat-2"></div>
+        <div class="heatmap-cell heat-3"></div>
+        <div class="heatmap-cell heat-4"></div>
+        <span>More</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ NOTES TAB ═══ -->
+  <div id="tab-notes" class="hidden">
+    <div class="section-title">Daily Notes</div>
+    <div class="date-nav" style="margin-bottom:12px">
+      <button onclick="changeDate(-1)">‹</button>
+      <span class="date-display" id="notes-date"></span>
+      <button onclick="changeDate(1)">›</button>
+    </div>
+    <textarea class="notes-area" id="notes-area" placeholder="What did you learn today? Any blockers or breakthroughs…" oninput="saveNotes()"></textarea>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-overlay hidden" id="export-modal">
+  <div class="modal">
+    <h3>Export Data</h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Your full study data as JSON. Save this file to back up or transfer to another device.</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('export-modal').classList.add('hidden')">Cancel</button>
+      <button class="btn btn-primary" onclick="downloadExport()">Download JSON</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA LAYER ───
+const STORAGE_KEY = 'studygrid_data';
+
+function getDefaultData() {
+  return {
+    subjects: [],
+    days: {},   // { "2026-08-01": { tasks: [...], notes: "" } }
+    version: 1
+  };
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return getDefaultData();
+    return JSON.parse(raw);
+  } catch { return getDefaultData(); }
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+let DATA = loadData();
+let currentDate = new Date();
+
+function dateKey(d) {
+  const dt = d || currentDate;
+  return dt.toISOString().split('T')[0];
+}
+function todayKey() { return new Date().toISOString().split('T')[0]; }
+function isToday() { return dateKey() === todayKey(); }
+
+function ensureDay(key) {
+  if (!DATA.days[key]) DATA.days[key] = { tasks: [], notes: '' };
+  return DATA.days[key];
+}
+
+// ─── SUBJECTS ───
+function addSubject() {
+  const input = document.getElementById('new-subject');
+  const cat = document.getElementById('subject-category').value;
+  const name = input.value.trim();
+  if (!name) return;
+  if (DATA.subjects.find(s => s.name.toLowerCase() === name.toLowerCase())) return;
+  DATA.subjects.push({ id: Date.now().toString(), name, category: cat, targetHours: 100 });
+  input.value = '';
+  saveData(DATA);
+  render();
+}
+
+function removeSubject(id) {
+  if (!confirm('Remove this subject? Task history stays.')) return;
+  DATA.subjects = DATA.subjects.filter(s => s.id !== id);
+  saveData(DATA);
+  render();
+}
+
+function updateTarget(id, val) {
+  const s = DATA.subjects.find(s => s.id === id);
+  if (s) { s.targetHours = Math.max(1, parseInt(val) || 100); saveData(DATA); render(); }
+}
+
+function getSubjectHours(subjectName) {
+  let total = 0;
+  for (const day of Object.values(DATA.days)) {
+    for (const t of (day.tasks || [])) {
+      if (t.subject === subjectName && t.done) total += (t.hours || 0);
+    }
+  }
+  return total;
+}
+
+// ─── TASKS ───
+function addTask() {
+  const input = document.getElementById('new-task');
+  const subSelect = document.getElementById('task-subject');
+  const hoursInput = document.getElementById('task-hours');
+  const text = input.value.trim();
+  if (!text) return;
+  const day = ensureDay(dateKey());
+  day.tasks.push({
+    id: Date.now().toString(),
+    text,
+    subject: subSelect.value || '',
+    hours: parseFloat(hoursInput.value) || 1,
+    done: false
+  });
+  input.value = '';
+  hoursInput.value = '1';
+  saveData(DATA);
+  render();
+}
+
+function toggleTask(taskId) {
+  const day = ensureDay(dateKey());
+  const t = day.tasks.find(t => t.id === taskId);
+  if (t) { t.done = !t.done; saveData(DATA); render(); }
+}
+
+function removeTask(taskId) {
+  const day = ensureDay(dateKey());
+  day.tasks = day.tasks.filter(t => t.id !== taskId);
+  saveData(DATA);
+  render();
+}
+
+// ─── NOTES ───
+function saveNotes() {
+  const day = ensureDay(dateKey());
+  day.notes = document.getElementById('notes-area').value;
+  saveData(DATA);
+}
+
+// ─── DATE NAV ───
+function changeDate(delta) {
+  currentDate.setDate(currentDate.getDate() + delta);
+  render();
+}
+
+// ─── STATS ───
+function computeStats() {
+  const today = ensureDay(dateKey());
+  const todayTasks = today.tasks || [];
+  const done = todayTasks.filter(t => t.done).length;
+  const total = todayTasks.length;
+  const todayHours = todayTasks.filter(t => t.done).reduce((s, t) => s + (t.hours || 0), 0);
+
+  // streak
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const key = d.toISOString().split('T')[0];
+    const day = DATA.days[key];
+    if (day && day.tasks && day.tasks.some(t => t.done)) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    } else if (key === todayKey() && todayTasks.length > 0 && done === 0) {
+      // today not done yet, check yesterday
+      d.setDate(d.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+
+  // total hours all time
+  let totalHours = 0;
+  for (const day of Object.values(DATA.days)) {
+    for (const t of (day.tasks || [])) {
+      if (t.done) totalHours += (t.hours || 0);
+    }
+  }
+
+  return { done, total, todayHours, streak, totalHours };
+}
+
+// ─── HEATMAP ───
+function renderHeatmap() {
+  const grid = document.getElementById('heatmap-grid');
+  const monthsEl = document.getElementById('heatmap-months');
+  grid.innerHTML = '';
+  monthsEl.innerHTML = '';
+
+  const weeks = 20;
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(start.getDate() - (weeks * 7) + (7 - start.getDay()));
+
+  let currentMonth = -1;
+  const d = new Date(start);
+
+  for (let w = 0; w < weeks; w++) {
+    const col = document.createElement('div');
+    col.className = 'heatmap-col';
+    for (let dow = 0; dow < 7; dow++) {
+      const key = d.toISOString().split('T')[0];
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+
+      if (d <= today) {
+        const day = DATA.days[key];
+        let hrs = 0;
+        if (day && day.tasks) {
+          hrs = day.tasks.filter(t => t.done).reduce((s, t) => s + (t.hours || 0), 0);
+        }
+        if (hrs > 0) {
+          const level = hrs <= 1 ? 1 : hrs <= 2 ? 2 : hrs <= 4 ? 3 : 4;
+          cell.classList.add('heat-' + level);
+        }
+        cell.title = key + ': ' + hrs + 'h';
+      }
+      col.appendChild(cell);
+      d.setDate(d.getDate() + 1);
+    }
+    grid.appendChild(col);
+  }
+}
+
+// ─── TABS ───
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  ['today', 'subjects', 'progress', 'notes'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+  });
+  if (tab === 'progress') renderHeatmap();
+  render();
+}
+
+// ─── EXPORT / IMPORT ───
+function exportData() {
+  document.getElementById('export-modal').classList.remove('hidden');
+}
+function downloadExport() {
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'studygrid-backup-' + todayKey() + '.json';
+  a.click();
+  document.getElementById('export-modal').classList.add('hidden');
+}
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (imported.subjects && imported.days) {
+        DATA = imported;
+        saveData(DATA);
+        render();
+        alert('Data imported successfully!');
+      } else {
+        alert('Invalid file format.');
+      }
+    } catch { alert('Failed to parse JSON.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── RENDER ───
+function render() {
+  // Stats
+  const stats = computeStats();
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Today's Progress</div>
+      <div class="stat-value">${stats.done}/${stats.total}</div>
+      <div class="stat-sub">${stats.todayHours}h studied</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Streak <span class="streak-fire">🔥</span></div>
+      <div class="stat-value">${stats.streak}</div>
+      <div class="stat-sub">consecutive days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Hours</div>
+      <div class="stat-value">${stats.totalHours.toFixed(1)}</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Subjects</div>
+      <div class="stat-value">${DATA.subjects.length}</div>
+      <div class="stat-sub">tracked</div>
+    </div>
+  `;
+
+  // Date display
+  const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+  const dateStr = currentDate.toLocaleDateString('en-US', opts);
+  document.getElementById('current-date').textContent = dateStr;
+  const notesDate = document.getElementById('notes-date');
+  if (notesDate) notesDate.textContent = dateStr;
+  const badge = document.getElementById('today-badge');
+  badge.classList.toggle('hidden', !isToday());
+
+  // Subject dropdown
+  const subSelect = document.getElementById('task-subject');
+  const currentVal = subSelect.value;
+  subSelect.innerHTML = '<option value="">— subject —</option>' +
+    DATA.subjects.map(s => `<option value="${s.name}" ${s.name === currentVal ? 'selected' : ''}>${s.name}</option>`).join('');
+
+  // Tasks
+  const day = ensureDay(dateKey());
+  const taskList = document.getElementById('task-list');
+  if (day.tasks.length === 0) {
+    taskList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        No tasks for this day yet.
+        <div class="empty-state-hint">Add your first study task below.</div>
+      </div>`;
+  } else {
+    taskList.innerHTML = day.tasks.map(t => `
+      <div class="task-item ${t.done ? 'done' : ''}">
+        <button class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTask('${t.id}')"></button>
+        <span class="task-text">${escHtml(t.text)}</span>
+        ${t.subject ? `<span class="task-subject-tag">${escHtml(t.subject)}</span>` : ''}
+        <span class="task-hours">${t.hours}h</span>
+        <button class="task-remove" onclick="removeTask('${t.id}')">×</button>
+      </div>
+    `).join('');
+  }
+
+  // Subjects grid
+  const grid = document.getElementById('subjects-grid');
+  if (DATA.subjects.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-state-icon">📚</div>
+        No subjects yet. Add your first subject above.
+      </div>`;
+  } else {
+    grid.innerHTML = DATA.subjects.map(s => {
+      const hrs = getSubjectHours(s.name);
+      const pct = Math.min(100, (hrs / s.targetHours * 100)).toFixed(0);
+      const catClass = s.category === 'core' ? 'tag-core' : s.category === 'project' ? 'tag-project' : 'tag-soft';
+      return `
+        <div class="subject-card">
+          <div class="subject-card-head">
+            <div class="subject-name">
+              ${escHtml(s.name)}
+              <span class="subject-tag ${catClass}">${s.category}</span>
+            </div>
+            <button class="remove-btn" onclick="removeSubject('${s.id}')">×</button>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="progress-info">
+            <span>${hrs.toFixed(1)}h completed</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="target-row">
+            Target:
+            <input class="target-input" type="number" value="${s.targetHours}" min="1"
+              onchange="updateTarget('${s.id}', this.value)">
+            hours
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Notes
+  const notesArea = document.getElementById('notes-area');
+  notesArea.value = day.notes || '';
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
