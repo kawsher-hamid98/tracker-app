@@ -312,6 +312,55 @@
   }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 
+  /* ─── LOGIN ─── */
+  .login-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: grid; place-items: center; z-index: 500;
+  }
+  .login-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 40px 36px;
+    width: 90%; max-width: 380px; text-align: center;
+  }
+  .login-logo {
+    width: 56px; height: 56px; background: var(--accent);
+    border-radius: 14px; display: grid; place-items: center;
+    font-size: 26px; color: #fff; margin: 0 auto 20px;
+  }
+  .login-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px; font-weight: 700; margin-bottom: 6px;
+  }
+  .login-sub {
+    font-size: 13px; color: var(--text-dim); margin-bottom: 28px;
+  }
+  .login-field {
+    width: 100%; padding: 11px 14px; margin-bottom: 12px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 14px; outline: none;
+  }
+  .login-field:focus { border-color: var(--border-focus); }
+  .login-field::placeholder { color: var(--text-dim); }
+  .login-btn {
+    width: 100%; padding: 11px; margin-top: 6px;
+    background: var(--accent); border: none; border-radius: var(--radius-sm);
+    color: #fff; font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .login-btn:hover { opacity: 0.9; }
+  .login-error {
+    color: var(--red); font-size: 13px; margin-top: 12px;
+    min-height: 20px;
+  }
+  .login-remember {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--text-muted);
+    margin-top: 8px; margin-bottom: 4px; justify-content: flex-start;
+  }
+  .login-remember input { accent-color: var(--accent); }
+
   /* ─── STREAK BADGE ─── */
   .streak-fire { color: var(--amber); }
 
@@ -350,7 +399,25 @@
 </head>
 <body>
 
-<div class="header">
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">◧</div>
+    <div class="login-title">StudyGrid</div>
+    <div class="login-sub">Sign in to your study tracker</div>
+    <input class="login-field" type="text" id="login-user" placeholder="Username" autofocus
+      onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <input class="login-field" type="password" id="login-pass" placeholder="Password"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <label class="login-remember">
+      <input type="checkbox" id="login-remember" checked> Remember me
+    </label>
+    <button class="login-btn" onclick="doLogin()">Sign in</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<div class="header" style="display:none" id="main-header">
   <div class="logo">
     <div class="logo-icon">◧</div>
     StudyGrid
@@ -359,10 +426,11 @@
     <button class="btn btn-sm" onclick="exportData()">Export JSON</button>
     <button class="btn btn-sm" onclick="document.getElementById('import-file').click()">Import</button>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-sm btn-danger" onclick="doLogout()">Logout</button>
   </div>
 </div>
 
-<div class="app">
+<div class="app" id="main-app" style="display:none">
   <div class="tabs">
     <button class="tab active" data-tab="today" onclick="switchTab('today')">Today</button>
     <button class="tab" data-tab="subjects" onclick="switchTab('subjects')">Subjects</button>
@@ -453,6 +521,49 @@
 </div>
 
 <script>
+// ─── AUTH ───
+const AUTH_USER = 'user3';
+const AUTH_PASS = '8787';
+const SESSION_KEY = 'studygrid_session';
+
+function checkSession() {
+  const s = localStorage.getItem(SESSION_KEY);
+  if (s === 'active') showApp();
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  if (u === AUTH_USER && p === AUTH_PASS) {
+    const remember = document.getElementById('login-remember').checked;
+    if (remember) localStorage.setItem(SESSION_KEY, 'active');
+    showApp();
+  } else {
+    err.textContent = 'Wrong username or password.';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('login-screen').style.display = 'grid';
+  document.getElementById('main-header').style.display = 'none';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-header').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'block';
+}
+
+checkSession();
+
 // ─── DATA LAYER ───
 const STORAGE_KEY = 'studygrid_data';
 
